@@ -15,6 +15,12 @@
             "VitePlugin\\": "src/"
         }
     },
+    "authors": [
+        {
+          "name": "arbi msahel"
+        }
+      ],
+    "minimum-stability": "dev",
     "autoload-dev": {
         "psr-4": {
             "VitePlugin\\Test\\": "tests/",
