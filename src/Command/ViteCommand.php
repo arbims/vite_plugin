@@ -34,6 +34,7 @@ class ViteCommand extends Command
   public const ASSETS_DIR_NAME = 'resources';
 
   public const VITE_FILE_CONFIG = 'vite.config.js';
+  public const VITE_PACKAGE = 'package.json';
 
 
   /**
@@ -51,18 +52,24 @@ class ViteCommand extends Command
    */
   public function execute(Arguments $args, ConsoleIo $io)
   {
-    $this->moveViteConfig();
     $this->createFolder();
-    $this->createJsFile();
+    if ($args->getArguments()[0] === 'vue') {
+      $this->moveViteConfig('vue');
+      $this->createJsFile('vue');
+    }elseif ($args->getArguments()[0] === 'preact') {
+      $this->moveViteConfig('preact');
+      $this->createJsFile('preact');
+      
+    }
     $this->createCssFile();
     $io->info('Note: You should run "npm install && npm run dev" to compile your updated scaffolding.');
 
     return null;
   }
 
-  public function moveViteConfig() {
-    copy(dirname(dirname(__DIR__)).'/stubs/preact/'. self::VITE_FILE_CONFIG , ROOT. '/'. self::VITE_FILE_CONFIG);
-    copy(dirname(dirname(__DIR__)).'/stubs/preact/package.json', ROOT. '/package.json');
+  public function moveViteConfig($sub_folder) {
+    copy(dirname(dirname(__DIR__))."/stubs/$sub_folder/". self::VITE_FILE_CONFIG , ROOT. '/'. self::VITE_FILE_CONFIG);
+    copy(dirname(dirname(__DIR__))."/stubs/$sub_folder/". self::VITE_PACKAGE , ROOT. '/'. self::VITE_PACKAGE );
   }
 
   public function createFolder() {
@@ -70,33 +77,36 @@ class ViteCommand extends Command
     if (!file_exists($resources. 'css')) {
       mkdir($resources. 'css', 0777, true);
     }
-    if (!file_exists($resources. 'css')) {
+    if (!file_exists($resources. 'js')) {
       mkdir($resources. 'js', 0777, true);
     }
-    if (!file_exists($resources. 'css')) {
+    if (!file_exists($resources. 'scss')) {
       mkdir($resources. 'scss', 0777, true);
     }
   }
 
-  public function createJsFile() {
+  public function createJsFile($vite_type) {
     $resources = ROOT . '/resources/js/';
-    $mainjsx = fopen($resources ."main.jsx", "w");
-    $txt = "import { render } from 'preact'\nimport { App } from './app'\nimport '../css/app.css'\nrender(<App />, document.getElementById('app'))";
-    fwrite($mainjsx, $txt);
-    fclose($mainjsx);
-    $appjsx = fopen($resources . "app.jsx", "w");
-    $txt = "export function App() {\n\nreturn (
-  <>
-    <div>
-      Welcome Preact + Vite + cakephp
-    </div>
-  </>
-  )
-}";
-    fwrite($appjsx, $txt);
-    fclose($appjsx);
+    if ($vite_type === 'preact') {
+      $mainjsx = fopen($resources ."main.jsx", "w");
+      $txt = "import { render } from 'preact'\nimport { App } from './app'\nimport '../css/app.css'\nrender(<App />, document.getElementById('app'))";
+      fwrite($mainjsx, $txt);
+      fclose($mainjsx);
+      $appjsx = fopen($resources . "app.jsx", "w");
+      $txt = "export function App() {\n\nreturn (\n<>\n<div>\nWelcome Preact + Vite + cakephp\n</div>\n</>\n)\n}";
+      fwrite($appjsx, $txt);
+      fclose($appjsx);  
+    }elseif ($vite_type === 'vue') {
+      $mainjs = fopen($resources ."main.js", "w");
+      $txt = "import { createApp } from 'vue'\nimport App from './App.vue'\nimport '../css/app.css'\ncreateApp(App).mount('#app')";
+      fwrite($mainjs, $txt);
+      fclose($mainjs);
+       $appvue = fopen($resources . "app.vue", "w");
+      $txt = "<script setup>\nexport default {\n\ndata () {\nreturn {\n app_type: 'Welcome Vue + Vite + cakephp'\n}\n}\n}\n</script>\n\n<template>{{ app_type }}</template>";
+      fwrite($appvue, $txt);
+      fclose($appvue);
+    } 
   }
-
 
   public function createCssFile() {
     $resources = ROOT . '/resources/css/';
