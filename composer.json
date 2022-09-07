@@ -1,5 +1,5 @@
 {
-    "name": "your-name-here/vite-plugin",
+    "name": "arbims/vite-plugin",
     "description": "VitePlugin plugin for CakePHP",
     "type": "cakephp-plugin",
     "license": "MIT",
