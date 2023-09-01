@@ -56,6 +56,9 @@ class ViteCommand extends Command
     if ($args->getArguments()[0] === 'vue') {
       $this->moveViteConfig('vue');
       $this->createJsFile('vue');
+    } elseif($args->getArguments()[0] === 'react') {
+      $this->moveViteConfig('react');
+      $this->createJsFile('react');
     }elseif ($args->getArguments()[0] === 'preact') {
       $this->moveViteConfig('preact');
       $this->createJsFile('preact');
@@ -96,6 +99,15 @@ class ViteCommand extends Command
       $txt = "export function App() {\n\nreturn (\n<>\n<div>\nWelcome Preact + Vite + cakephp\n</div>\n</>\n)\n}";
       fwrite($appjsx, $txt);
       fclose($appjsx);  
+    } elseif($vite_type === 'react') {
+        $mainjsx = fopen($resources ."main.jsx", "w");
+        $txt = "import { render } from 'react'\nimport { App } from './app'\nimport '../css/app.css'\nrender(<App />, document.getElementById('app'))";
+        fwrite($mainjsx, $txt);
+        fclose($mainjsx);
+        $appjsx = fopen($resources . "app.jsx", "w");
+        $txt = "export function App() {\n\nreturn (\n<>\n<div>\nWelcome React + Vite + cakephp\n</div>\n</>\n)\n}";
+        fwrite($appjsx, $txt);
+        fclose($appjsx);  
     }elseif ($vite_type === 'vue') {
       $mainjs = fopen($resources ."main.js", "w");
       $txt = "import { createApp } from 'vue'\nimport App from './App.vue'\nimport '../css/app.css'\ncreateApp(App).mount('#app')";

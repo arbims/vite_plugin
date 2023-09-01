@@ -7,17 +7,32 @@ use Cake\View\Helper;
 
 class ViteHelper extends Helper {
 
-    public $manifest = '';
-    public $url;
+    public string $manifest = '';
+    public string $url = '';
 
     private $manifestData = null;
-    
-    public function assets($url, $isDev) {
+
+    public function assets(string $url,string $isDev, $lib = null) {
         $base = 'http://localhost:3000/assets';
+        $html = '';
         if($isDev) {
-            return <<<HTML
+            if ($lib === 'react') {
+                $html .= <<<HTML
+                <script type="module" src="{$base}/@vite/client"></script>
+                HTML;
+                    $html .= '<script type="module">
+                    import RefreshRuntime from "'.$base.'/@react-refresh"
+                    RefreshRuntime.injectIntoGlobalHook(window)
+                    window.$RefreshReg$ = () => {}
+                    window.$RefreshSig$ = () => (type) => type
+                    window.__vite_plugin_react_preamble_installed__ = true
+                </script>';    
+            }
+            
+            $html .= <<<HTML
             <script src="{$base}/{$url}" type="module" defer></script>
             HTML;
+            return $html;
         } else {
             return $this->assetProd($url);
         }
