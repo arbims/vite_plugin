@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  root: './resources/',
+  root: './assets/',
   base: '/assets/',
   build: {
     outDir: '../webroot/assets',
@@ -15,7 +15,7 @@ export default defineConfig({
         manualChunks: undefined
       },
       input: {
-        'main.jsx': './resources/js/main.jsx'
+        'main.jsx': './assets/js/main.jsx'
       }
     }
   }

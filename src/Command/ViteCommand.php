@@ -62,7 +62,7 @@ class ViteCommand extends Command
     }elseif ($args->getArguments()[0] === 'preact') {
       $this->moveViteConfig('preact');
       $this->createJsFile('preact');
-      
+
     }
     $this->createCssFile();
     $io->info('Note: You should run "npm install && npm run dev" to compile your updated scaffolding.');
@@ -89,7 +89,7 @@ class ViteCommand extends Command
   }
 
   public function createJsFile($vite_type) {
-    $resources = ROOT . '/resources/js/';
+    $resources = ROOT . '/assets/js/';
     if ($vite_type === 'preact') {
       $mainjsx = fopen($resources ."main.jsx", "w");
       $txt = "import { render } from 'preact'\nimport { App } from './app'\nimport '../css/app.css'\nrender(<App />, document.getElementById('app'))";
@@ -98,7 +98,7 @@ class ViteCommand extends Command
       $appjsx = fopen($resources . "app.jsx", "w");
       $txt = "export function App() {\n\nreturn (\n<>\n<div>\nWelcome Preact + Vite + cakephp\n</div>\n</>\n)\n}";
       fwrite($appjsx, $txt);
-      fclose($appjsx);  
+      fclose($appjsx);
     } elseif($vite_type === 'react') {
         $mainjsx = fopen($resources ."main.jsx", "w");
         $txt = "import { render } from 'react'\nimport { App } from './app'\nimport '../css/app.css'\nrender(<App />, document.getElementById('app'))";
@@ -107,7 +107,7 @@ class ViteCommand extends Command
         $appjsx = fopen($resources . "app.jsx", "w");
         $txt = "export function App() {\n\nreturn (\n<>\n<div>\nWelcome React + Vite + cakephp\n</div>\n</>\n)\n}";
         fwrite($appjsx, $txt);
-        fclose($appjsx);  
+        fclose($appjsx);
     }elseif ($vite_type === 'vue') {
       $mainjs = fopen($resources ."main.js", "w");
       $txt = "import { createApp } from 'vue'\nimport App from './App.vue'\nimport '../css/app.css'\ncreateApp(App).mount('#app')";
@@ -117,11 +117,11 @@ class ViteCommand extends Command
       $txt = "<script setup>\nexport default {\n\ndata () {\nreturn {\n app_type: 'Welcome Vue + Vite + cakephp'\n}\n}\n}\n</script>\n\n<template>{{ app_type }}</template>";
       fwrite($appvue, $txt);
       fclose($appvue);
-    } 
+    }
   }
 
   public function createCssFile() {
-    $resources = ROOT . '/resources/css/';
+    $resources = ROOT . '/assets/css/';
     $appcss = fopen($resources . "app.css", "w");
     $txt = "body{color: blue; text-align:center;}";
     fwrite($appcss, $txt);
