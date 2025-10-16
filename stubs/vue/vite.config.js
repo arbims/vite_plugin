@@ -4,7 +4,7 @@ import vue from '@vitejs/plugin-vue'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
-  root: './assets/',
+  root: './resources/',
   base: '/assets/',
   build: {
     outDir: '../webroot/assets',
@@ -15,7 +15,7 @@ export default defineConfig({
         manualChunks: undefined
       },
       input: {
-        'main.js': './assets/js/main.js'
+        'main.js': './resources/js/main.js'
       }
     }
   },
