@@ -4,128 +4,153 @@ declare(strict_types=1);
 
 namespace VitePlugin\Command;
 
-use VitePlugin\StubsPathTrait;
 use Cake\Command\Command;
 use Cake\Console\Arguments;
 use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
 
-
 class ViteCommand extends Command
 {
+    public const ASSETS_DIR = 'resources';
+    public const VITE_FILE_CONFIG = 'vite.config.js';
+    public const VITE_PACKAGE = 'package.json';
 
-  /**
-   * Filesystem utility object
-   *
-   * @var \AssetMix\Utility\FileUtility
-   */
-  private $filesystem;
+    /**
+     * @inheritDoc
+     */
+    protected function buildOptionParser(ConsoleOptionParser $parser): ConsoleOptionParser
+    {
+        $parser = parent::buildOptionParser($parser);
+        $parser->setDescription('Installe et configure Vite.js avec Vue, React ou Preact pour CakePHP.');
+        $parser->addArgument('framework', [
+            'help' => 'Le framework JS à installer (vue, react ou preact)',
+            'required' => true,
+        ]);
 
-  /**
-   * Preset type provided via argument.
-   *
-   * @var string|null
-   */
-  private $preset;
-
-  /**
-   * Directory name where all assets(js, css) files will reside.
-   */
-  public const ASSETS_DIR_NAME = 'resources';
-
-  public const VITE_FILE_CONFIG = 'vite.config.js';
-  public const VITE_PACKAGE = 'package.json';
-
-
-  /**
-   * @inheritDoc
-   */
-  protected function buildOptionParser(ConsoleOptionParser $parser): ConsoleOptionParser
-  {
-    $parser = parent::buildOptionParser($parser);
-
-    return $parser;
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public function execute(Arguments $args, ConsoleIo $io)
-  {
-    $this->createFolder();
-    if ($args->getArguments()[0] === 'vue') {
-      $this->moveViteConfig('vue');
-      $this->createJsFile('vue');
-    } elseif($args->getArguments()[0] === 'react') {
-      $this->moveViteConfig('react');
-      $this->createJsFile('react');
-    }elseif ($args->getArguments()[0] === 'preact') {
-      $this->moveViteConfig('preact');
-      $this->createJsFile('preact');
-
+        return $parser;
     }
-    $this->createCssFile();
-    $io->info('Note: You should run "npm install && npm run dev" to compile your updated scaffolding.');
 
-    return null;
-  }
+    /**
+     * @inheritDoc
+     */
+    public function execute(Arguments $args, ConsoleIo $io)
+    {
+        $type = strtolower($args->getArgument('framework'));
 
-  public function moveViteConfig($sub_folder) {
-    copy(dirname(dirname(__DIR__))."/stubs/$sub_folder/". self::VITE_FILE_CONFIG , ROOT. '/'. self::VITE_FILE_CONFIG);
-    copy(dirname(dirname(__DIR__))."/stubs/$sub_folder/". self::VITE_PACKAGE , ROOT. '/'. self::VITE_PACKAGE );
-  }
+        if (!in_array($type, ['vue', 'react', 'preact'])) {
+            $io->error('Veuillez spécifier un framework valide : vue, react ou preact.');
+            return Command::CODE_ERROR;
+        }
 
-  public function createFolder() {
-    $resources = ROOT . '/resources/';
-    if (!file_exists($resources. 'css')) {
-      mkdir($resources. 'css', 0777, true);
+        $io->out("📁 Création des dossiers /" . self::ASSETS_DIR . "...");
+        $this->createFolders();
+
+        $io->out("⚙️  Copie de la configuration Vite pour {$type}...");
+        $this->copyViteConfig($type);
+
+        $io->out("🧩 Création des fichiers JS et CSS de base...");
+        $this->createJsFiles($type);
+        $this->createCssFile();
+
+        $io->success("✅ Vite.js a été configuré avec succès pour {$type} !");
+        $io->info('💡 Exécutez maintenant : npm install && npm run dev');
+
+        return Command::CODE_SUCCESS;
     }
-    if (!file_exists($resources. 'js')) {
-      mkdir($resources. 'js', 0777, true);
+
+    private function createFolders(): void
+    {
+        $resources = ROOT . '/' . self::ASSETS_DIR . '/';
+        foreach (['css', 'js', 'scss'] as $dir) {
+            $path = $resources . $dir;
+            if (!file_exists($path)) {
+                mkdir($path, 0777, true);
+            }
+        }
     }
-    if (!file_exists($resources. 'scss')) {
-      mkdir($resources. 'scss', 0777, true);
+
+    private function copyViteConfig(string $framework): void
+    {
+        $stubDir = dirname(dirname(__DIR__)) . "/stubs/{$framework}/";
+        $root = ROOT . '/';
+
+        copy($stubDir . self::VITE_FILE_CONFIG, $root . self::VITE_FILE_CONFIG);
+        copy($stubDir . self::VITE_PACKAGE, $root . self::VITE_PACKAGE);
+    }
+
+    private function createJsFiles(string $framework): void
+    {
+        $resources = ROOT . '/' . self::ASSETS_DIR . '/js/';
+
+        switch ($framework) {
+            case 'preact':
+                file_put_contents($resources . "main.jsx", <<<JS
+import { render } from 'preact'
+import { App } from './app'
+import '../css/app.css'
+
+render(<App />, document.getElementById('app'))
+JS);
+                file_put_contents($resources . "app.jsx", <<<JS
+export function App() {
+  return (
+    <>
+      <div>Welcome Preact + Vite + CakePHP</div>
+    </>
+  )
+}
+JS);
+                break;
+
+            case 'react':
+                file_put_contents($resources . "main.jsx", <<<JS
+import { createRoot } from 'react-dom/client'
+import { App } from './app'
+import '../css/app.css'
+
+createRoot(document.getElementById('app')).render(<App />)
+JS);
+                file_put_contents($resources . "app.jsx", <<<JS
+export function App() {
+  return (
+    <>
+      <div>Welcome React + Vite + CakePHP</div>
+    </>
+  )
+}
+JS);
+                break;
+
+            case 'vue':
+                file_put_contents($resources . "main.js", <<<JS
+import { createApp } from 'vue'
+import App from './App.vue'
+import '../css/app.css'
+
+createApp(App).mount('#app')
+JS);
+                file_put_contents($resources . "App.vue", <<<VUE
+<template>
+  <div>{{ app_type }}</div>
+</template>
+
+<script setup>
+export default {
+  data() {
+    return {
+      app_type: 'Welcome Vue + Vite + CakePHP'
     }
   }
-
-  public function createJsFile($vite_type) {
-    $resources = ROOT . '/assets/js/';
-    if ($vite_type === 'preact') {
-      $mainjsx = fopen($resources ."main.jsx", "w");
-      $txt = "import { render } from 'preact'\nimport { App } from './app'\nimport '../css/app.css'\nrender(<App />, document.getElementById('app'))";
-      fwrite($mainjsx, $txt);
-      fclose($mainjsx);
-      $appjsx = fopen($resources . "app.jsx", "w");
-      $txt = "export function App() {\n\nreturn (\n<>\n<div>\nWelcome Preact + Vite + cakephp\n</div>\n</>\n)\n}";
-      fwrite($appjsx, $txt);
-      fclose($appjsx);
-    } elseif($vite_type === 'react') {
-        $mainjsx = fopen($resources ."main.jsx", "w");
-        $txt = "import { render } from 'react'\nimport { App } from './app'\nimport '../css/app.css'\nrender(<App />, document.getElementById('app'))";
-        fwrite($mainjsx, $txt);
-        fclose($mainjsx);
-        $appjsx = fopen($resources . "app.jsx", "w");
-        $txt = "export function App() {\n\nreturn (\n<>\n<div>\nWelcome React + Vite + cakephp\n</div>\n</>\n)\n}";
-        fwrite($appjsx, $txt);
-        fclose($appjsx);
-    }elseif ($vite_type === 'vue') {
-      $mainjs = fopen($resources ."main.js", "w");
-      $txt = "import { createApp } from 'vue'\nimport App from './App.vue'\nimport '../css/app.css'\ncreateApp(App).mount('#app')";
-      fwrite($mainjs, $txt);
-      fclose($mainjs);
-       $appvue = fopen($resources . "app.vue", "w");
-      $txt = "<script setup>\nexport default {\n\ndata () {\nreturn {\n app_type: 'Welcome Vue + Vite + cakephp'\n}\n}\n}\n</script>\n\n<template>{{ app_type }}</template>";
-      fwrite($appvue, $txt);
-      fclose($appvue);
+}
+</script>
+VUE);
+                break;
+        }
     }
-  }
 
-  public function createCssFile() {
-    $resources = ROOT . '/assets/css/';
-    $appcss = fopen($resources . "app.css", "w");
-    $txt = "body{color: blue; text-align:center;}";
-    fwrite($appcss, $txt);
-    fclose($appcss);
-  }
-
+    private function createCssFile(): void
+    {
+        $resources = ROOT . '/' . self::ASSETS_DIR . '/css/';
+        file_put_contents($resources . "app.css", "body { color: blue; text-align: center; }");
+    }
 }
