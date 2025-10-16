@@ -9,7 +9,7 @@ export default defineConfig({
     jsxInject: `import { h, Fragment } from 'preact'`
   },
   plugins: [preactRefresh()],
-  root: './assets/',
+  root: './resources/',
   base: '/assets/',
   build: {
     outDir: '../webroot/assets',
@@ -20,7 +20,7 @@ export default defineConfig({
         manualChunks: undefined
       },
       input: {
-        'main.jsx': './assets/js/main.jsx'
+        'main.jsx': './resources/js/main.jsx'
       }
     }
   }
